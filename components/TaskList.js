@@ -1,15 +1,18 @@
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
-import { StyleSheet, Text, View, Button, TextInput, FlatList } from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, FlatList, SafeAreaView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { addTask } from '../redux/taskSlice';
 import { addHistory } from '../redux/historySlice';
 import { v4 as uuidv4 } from 'uuid';
+import Timer from './Timer';
+
 
 export default function TaskList() {
   const navigation = useNavigation();
   const [value, setValue] = useState('');
   const tasks = useSelector(state => state.tasks.tasks);
+  const taskId = uuidv4()
   const dispatch = useDispatch();
 
   const handleAddTask = () => {
@@ -18,25 +21,25 @@ export default function TaskList() {
     }
 
     const newTask = {
+      id: taskId,
       name: value,
-      key: Math.random().toString(),
+      time: 0
     };
 
     dispatch(addTask(newTask));
     setValue('');
 
-    // Dispatch the addHistory action with the newHistoryTask
     const newHistoryTask = {
       id: uuidv4(),
       name: value,
-      time: Date.now()
+      date: new Date()
     };
 
     dispatch(addHistory(newHistoryTask));
   }
 
   return (
-    <View>
+    <SafeAreaView style={styles.container}>
       <View>
         <TextInput
           style={styles.input}
@@ -50,20 +53,31 @@ export default function TaskList() {
       </View>
       
       <FlatList
-        style={styles.taskContainer}
         data={tasks}
-        renderItem={({ item }) => <Text>{item.name}</Text>}
+        renderItem={({ item }) => <Task name={item.name}/>}
       />
 
       <Button
         title='Check your history'
         onPress={() => navigation.navigate('History')}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
+  function Task({name}){
+    return (
+      <View style={styles.taskContainer}>
+        <Text >{name}</Text>
+        <Timer/>
+      </View>
+    )
+  }
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   input: {
     height: 40,
     margin: 12,
@@ -71,6 +85,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   taskContainer: {
-    padding: 50,
-  },
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding:40
+  }
 });
